@@ -12,7 +12,7 @@ var express = require('express')
 var app = express();
 
 // all environments
-app.set('port', process.env.PORT || 3000);
+app.set('port', process.env.PORT || 1000);
 app.set('views', __dirname + '/views');
 app.set('view engine', 'jade');
 app.use(express.favicon());
@@ -64,13 +64,14 @@ io.sockets.on('connection', function (socket) {
       users[data.user] = data.user;
     }
     //向所有用户广播该用户上线信息
-    io.sockets.emit('online', {users: users, user: data.user});
+    io.sockets.emit('online', {users: users, user: data.user, time: new Date().toString()});
   });
 
   //有人发话
   socket.on('say', function (data) {
     if (data.to == 'all') {
       //向其他所有用户广播该用户发话信息
+      data.time = new Date().toString();
       socket.broadcast.emit('say', data);
     } else {
       //向特定用户发送该用户发话信息
@@ -80,6 +81,7 @@ io.sockets.on('connection', function (socket) {
       clients.forEach(function (client) {
         if (client.name == data.to) {
           //触发该用户客户端的 say 事件
+          data.time = new Date().toString();
           client.emit('say', data);
         }
       });
@@ -93,7 +95,7 @@ io.sockets.on('connection', function (socket) {
       //从 users 对象中删除该用户名
       delete users[socket.name];
       //向其他所有用户广播该用户下线信息
-      socket.broadcast.emit('offline', {users: users, user: socket.name});
+      socket.broadcast.emit('offline', {users: users, user: socket.name, time: new Date().toString()});
     }
   });
 });
